@@ -5,12 +5,22 @@
 #define WIDTH 800
 #define HEIGHT 600
 
+
 // Structure pour stocker un point 3D
-typedef struct s_point {
-    int x;
-    int y;
-    int z;
-} t_point;
+typedef struct	s_point
+{
+	int	x;
+	int	y;
+	int	z;
+}	t_point;
+
+// Structure pour stocker une application
+typedef struct	t_app
+{
+	void	*mlx;
+	void	*win;
+	t_point	**points;
+}			s_app;
 
 // Projection isométrique : convertit un point 3D en 2D
 void project_iso(t_point p, int *x2d, int *y2d) {
