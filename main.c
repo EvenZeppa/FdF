@@ -1,9 +1,14 @@
-#include "mlx.h"
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
 
-#define WIDTH 800
-#define HEIGHT 600
+#include "mlx.h"
+#include "libft.h"
+#include "get_next_line.h"
+
+#define WIDTH 900
+#define HEIGHT 900
 
 
 // Structure pour stocker un point 3D
@@ -15,60 +20,155 @@ typedef struct	s_point
 }	t_point;
 
 // Structure pour stocker une application
-typedef struct	t_app
+typedef struct	s_app
 {
 	void	*mlx;
 	void	*win;
 	t_point	**points;
-}			s_app;
+	int w;
+	int h;
+}			t_app;
 
-// Projection isométrique : convertit un point 3D en 2D
-void project_iso(t_point p, int *x2d, int *y2d) {
-    *x2d = p.x - p.z;                // Formule pour x'
-    *y2d = p.y - (p.x + p.z) / 2;    // Formule pour y'
+void	init_points(t_app *app, char *file)
+{
+	int		fd;
+	char	*line;
+	int		y;
+	int		x;
+	char	**split;
+
+	fd = open(file, O_RDONLY);
+	if (fd < 0)
+	{
+		perror("open");
+		exit(1);
+	}
+	app->points = malloc(sizeof(t_point *) * 100);
+	y = 0;
+	while ((line = get_next_line(fd)))
+	{
+		split = ft_split(line, ' ');
+		app->points[y] = malloc(sizeof(t_point) * 100);
+		x = 0;
+		while (split[x])
+		{
+			app->points[y][x].x = x;
+			app->points[y][x].y = y;
+			app->points[y][x].z = ft_atoi(split[x]);
+			x++;
+		}
+		if (x > app->w)
+			app->w = x;
+		y++;
+	}
+	app->h = y;
+	app->points[y] = NULL;
 }
 
-// Fonction pour tracer une ligne (Bresenham)
-void draw_line(void *mlx, void *win, int x0, int y0, int x1, int y1, int color) {
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
-    int sx = (x0 < x1) ? 1 : -1;
-    int sy = (y0 < y1) ? 1 : -1;
-    int err = dx - dy;
-    while (1) {
-        mlx_pixel_put(mlx, win, x0, y0, color);
-        if (x0 == x1 && y0 == y1) break;
-        int e2 = err * 2;
-        if (e2 > -dy) { err -= dy; x0 += sx; }
-        if (e2 < dx) { err += dx; y0 += sy; }
-    }
+void	print_points(t_app *app)
+{
+	int	y;
+	int	x;
+
+	y = 0;
+	while (app->points[y])
+	{
+		x = 0;
+		while (app->points[y][x].z)
+		{
+			ft_printf("x: %d, y: %d, z: %d\n", app->points[y][x].x, app->points[y][x].y, app->points[y][x].z);
+			x++;
+		}
+		y++;
+	}
 }
 
-int main() {
-    void *mlx = mlx_init();
-    void *win = mlx_new_window(mlx, WIDTH, HEIGHT, "Isometric Projection");
+int	exit_program(t_app *app)
+{
+	int	y;
 
-    // Définition du point d'origine
-    t_point origin = {0, 0, 0};
+	y = 0;
+	while (app->points[y])
+	{
+		free(app->points[y]);
+		y++;
+	}
+	free(app->points);
 
-    // Axes unitaires
-    t_point x_axis = {100, 0, 0}; // Vecteur pour X
-    t_point y_axis = {0, 100, 0}; // Vecteur pour Y
-    t_point z_axis = {0, 0, 100}; // Vecteur pour Z
+	mlx_destroy_window(app->mlx, app->win);
+	mlx_destroy_display(app->mlx);
 
-    // Projection des points 3D en 2D
-    int ox, oy, x2d, y2d;
+	return (exit(0), 0);
+}
 
-    project_iso(origin, &ox, &oy);
-    project_iso(x_axis, &x2d, &y2d);
-    draw_line(mlx, win, ox + WIDTH / 2, oy + HEIGHT / 2, x2d + WIDTH / 2, y2d + HEIGHT / 2, 0xFF0000); // Rouge pour X
+int key_press_handler(int keycode, t_app *param)
+{
+	ft_printf("Key pressed: %d\n", keycode);
+	if (keycode == 65307)
+		exit_program(param);
+	return (0);
+}
 
-    project_iso(y_axis, &x2d, &y2d);
-    draw_line(mlx, win, ox + WIDTH / 2, oy + HEIGHT / 2, x2d + WIDTH / 2, y2d + HEIGHT / 2, 0x00FF00); // Vert pour Y
+void	draw_line(t_app *app, t_point a, t_point b)
+{
+	int dx = (b.x * 80) - (a.x * 80);
+	int dy = (b.y * 80) - (a.y * 80);
+	int steps = abs(dx) > abs(dy) ? abs(dx) : abs(dy);
+	float xinc = dx / (float)steps;
+	float yinc = dy / (float)steps;
+	float x = a.x * 80;
+	float y = a.y * 80;
+	int i = 0;
 
-    project_iso(z_axis, &x2d, &y2d);
-    draw_line(mlx, win, ox + WIDTH / 2, oy + HEIGHT / 2, x2d + WIDTH / 2, y2d + HEIGHT / 2, 0x0000FF); // Bleu pour Z
+	while (i <= steps)
+	{
+		mlx_pixel_put(app->mlx, app->win, x, y, 0xFFFFFF);
+		x += xinc;
+		y += yinc;
+		i++;
+	}
+}
 
-    mlx_loop(mlx);
-    return 0;
+int run(t_app *app)
+{
+	int y = 0;
+	
+	while (app->points[y])
+	{
+		int x = 0;
+		while (x < app->w)
+		{
+			mlx_pixel_put(app->mlx, app->win, app->points[y][x].x * 80, app->points[y][x].y * 80, 0xFFFFFF);
+			if (y < app->h - 1)
+				draw_line(app, app->points[y][x], app->points[y + 1][x]);
+			if (x < app->w - 1)
+				draw_line(app, app->points[y][x], app->points[y][x + 1]);
+			x++;
+		}
+		y++;
+	}
+
+	return (0);
+}
+
+int main(int ac, char **av) {
+
+	if (ac != 2)
+		return (1);
+	t_app app;
+
+	app.mlx = mlx_init();
+	app.win = mlx_new_window(app.mlx, WIDTH, HEIGHT, "Isometric Projection");
+
+	init_points(&app, av[1]);
+
+	// print_points(&app);
+
+	mlx_hook(app.win, 2, 1L << 0, key_press_handler, &app);
+	mlx_hook(app.win, 17, 0, exit_program, &app);
+
+	mlx_loop_hook(app.mlx, run, &app);
+	mlx_loop(app.mlx);
+
+	return 0;
 }
