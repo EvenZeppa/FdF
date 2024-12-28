@@ -1,7 +1,11 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -g -Wall -Wextra -Werror -Iinclude
 LDFLAGS = -lmlx -lXext -lX11 -lm
-SRCS = main.c get_next_line.c get_next_line_utils.c
+SRCS =	get_next_line.c get_next_line_utils.c \
+		src/main.c\
+		src/init.c\
+		src/free.c\
+		src/run.c
 NAME = fdf
 
 all: $(NAME)
