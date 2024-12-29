@@ -34,8 +34,8 @@ int	project_point_into_plane(t_app *app, t_point *point, t_point *p_point)
 
 void	convert_to_screen_point(t_point *point, t_rect *screen, t_point *p_point)
 {
-	p_point->x = (point->x - screen->x) * WIN_WIDTH / screen->w ;
-	p_point->y = (point->y - screen->y) * WIN_HEIGHT / screen->h ;
+	p_point->x = (point->x - screen->x) * WIN_WIDTH / screen->w;
+	p_point->y = (point->y - screen->y) * WIN_HEIGHT / screen->h;
 
 	p_point->y = WIN_HEIGHT - p_point->y;
 	// p_point->x = WIN_WIDTH - p_point->x;
@@ -85,6 +85,97 @@ void	rotate_points(t_app *app, char axis, float angle)
 	}
 }
 
+int	compute_code(t_point *point, t_rect *screen)
+{
+	int code = CLIP_INSIDE;
+
+	if (point->x < screen->x)
+		code |= CLIP_LEFT;
+	else if (point->x > screen->x + screen->w)
+		code |= CLIP_RIGHT;
+	if (point->y < screen->y)
+		code |= CLIP_BOTTOM;
+	else if (point->y > screen->y + screen->h)
+		code |= CLIP_TOP;
+
+	return (code);
+}
+
+int cohen_sutherland_clip(t_point *p1, t_point *p2, t_rect *screen)
+{
+	int code1 = compute_code(p1, screen);
+	int code2 = compute_code(p2, screen);
+	int is_accept = 0;
+
+	while (TRUE)
+	{
+		if (!(code1 | code2))
+		{
+			is_accept = 1;
+			break;
+		}
+		else if (code1 & code2)
+		{
+			is_accept = 0;
+			break;
+		}
+		else
+		{
+			is_accept = 0;
+			break;
+			int code_out = code1 ? code1 : code2;
+			int x, y;
+
+			if (code_out & CLIP_TOP)
+			{
+				if (p2->y != p1->y)
+				{
+					x = p1->x + (int)((float)(p2->x - p1->x) * (screen->y + screen->h - p1->y) / (p2->y - p1->y));
+					y = screen->y + screen->h;
+				}
+			}
+			else if (code_out & CLIP_BOTTOM)
+			{
+				if (p2->y != p1->y)
+				{
+					x = p1->x + (int)((float)(p2->x - p1->x) * (screen->y - p1->y) / (p2->y - p1->y));
+					y = screen->y;
+				}
+			}
+			else if (code_out & CLIP_RIGHT)
+			{
+				if (p2->x != p1->x)
+				{
+					y = p1->y + (int)((float)(p2->y - p1->y) * (screen->x + screen->w - p1->x) / (p2->x - p1->x));
+					x = screen->x + screen->w;
+				}
+			}
+			else if (code_out & CLIP_LEFT)
+			{
+				if (p2->x != p1->x)
+				{
+					y = p1->y + (int)((float)(p2->y - p1->y) * (screen->x - p1->x) / (p2->x - p1->x));
+					x = screen->x;
+				}
+			}
+
+			if (code_out == code1)
+			{
+				p1->x = x;
+				p1->y = y;
+				code1 = compute_code(p1, screen);
+			}
+			else
+			{
+				p2->x = x;
+				p2->y = y;
+				code2 = compute_code(p2, screen);
+			}
+		}
+	}
+
+	return is_accept;
+}
 
 void	draw_line(t_point *p1, t_point *p2, t_app *app, int color)
 {
@@ -176,21 +267,26 @@ int	run_app(t_app *app)
 
 			if (project_point_into_plane(app, &app->points[x][y], &p_point))
 			{
-				// convert_to_screen_point(&p_point, app->p_win, &p_point);
-				// mlx_pixel_put(app->mlx, app->win, p_point.x, p_point.y, 0xFFFFFF);
+				if (!cohen_sutherland_clip(&app->points[x][y], &p_point, app->p_win))
+				{
+					y++;
+					continue;
+				}
 				if (y + 1 < app->nb_cols)
 				{
 					t_point	p_point2;
 
 					project_point_into_plane(app, &app->points[x][y + 1], &p_point2);
-					draw_line(&p_point, &p_point2, app, 0xFFFFFF);
+					if (cohen_sutherland_clip(&app->points[x][y], &app->points[x][y + 1], app->p_win))
+						draw_line(&p_point, &p_point2, app, 0xFFFFFF);
 				}
 				if (x + 1 < app->nb_rows)
 				{
 					t_point	p_point2;
 
 					project_point_into_plane(app, &app->points[x + 1][y], &p_point2);
-					draw_line(&p_point, &p_point2, app, 0xFFFFFF);
+					if (cohen_sutherland_clip(&app->points[x][y], &app->points[x + 1][y], app->p_win))
+						draw_line(&p_point, &p_point2, app, 0xFFFFFF);
 				}
 			}
 			y++;

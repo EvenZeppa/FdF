@@ -12,6 +12,12 @@
 # define WIN_WIDTH 800
 # define WIN_HEIGHT 800
 
+# define CLIP_INSIDE 0
+# define CLIP_LEFT 1
+# define CLIP_RIGHT 2
+# define CLIP_BOTTOM 4
+# define CLIP_TOP 8
+
 int		init_app(t_app *app);
 int		init_points(t_app *app, char *file);
 int		init_proj(t_app *app);

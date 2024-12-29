@@ -83,9 +83,9 @@ int	init_proj(t_app *app)
 	app->p_win = malloc(sizeof(t_rect));
 	if (!app->p_win)
 		return (ft_printf("Error: malloc p_win\n"), 0);	
-	app->p_win->x = -32000;
-	app->p_win->y = -32000;
-	app->p_win->w = 56000;
-	app->p_win->h = 56000;
+	app->p_win->x = -16000;
+	app->p_win->y = -16000;
+	app->p_win->w = 32000;
+	app->p_win->h = 32000;
 	return (1);
 }

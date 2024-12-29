@@ -1,10 +1,28 @@
 #include "fdf.h"
 
+void	zoom_in(t_rect *screen)
+{
+	screen->x += screen->w / 4;
+	screen->y += screen->h / 4;
+	screen->w /= 2;
+	screen->h /= 2;
+}
+
+void	zoom_out(t_rect *screen)
+{
+	screen->x -= screen->w / 2;
+	screen->y -= screen->h / 2;
+	screen->w *= 2;
+	screen->h *= 2;
+}
+
 int	key_hook(int keycode, t_app *app)
 {
 	static int rot_x = 0;
 	static int rot_y = 0;
 	static int rot_z = 0;
+
+	// ft_printf("keycode: %d\n", keycode);
 
 	if (keycode == 53)
 	{
@@ -32,8 +50,12 @@ int	key_hook(int keycode, t_app *app)
 		if (rot_z == 360)
 			rot_z = 0;
 	}
+	if (keycode == 119)
+		zoom_in(app->p_win);
+	if (keycode == 115)
+		zoom_out(app->p_win);
+
 	app->update = 0;
-	ft_printf("x: %d, y: %d, z: %d\n", rot_x, rot_y, rot_z);
 	return (0);
 }
 
