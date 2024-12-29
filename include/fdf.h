@@ -22,6 +22,7 @@ void	free_app(t_app *app);
 
 int	project_point_into_plane(t_app *app, t_point *point, t_point *p_point);
 void	convert_to_screen_point(t_point *point, t_rect *screen, t_point *p_point);
+void	rotate_points(t_app *app, char axis, float angle);
 int		run_app(t_app *app);
 
 #endif

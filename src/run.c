@@ -37,10 +37,54 @@ void	convert_to_screen_point(t_point *point, t_rect *screen, t_point *p_point)
 	p_point->x = (point->x - screen->x) * WIN_WIDTH / screen->w ;
 	p_point->y = (point->y - screen->y) * WIN_HEIGHT / screen->h ;
 
-	// p_point->y = WIN_HEIGHT - p_point->y;
+	p_point->y = WIN_HEIGHT - p_point->y;
 	// p_point->x = WIN_WIDTH - p_point->x;
 	// ft_printf("x: %d, y: %d\n", p_point->x, p_point->y);
 }
+
+void rotate_point(t_point *point, char axis, float angle)
+{
+	float rad = angle * M_PI / 180.0; // Convertir l'angle en radians
+	float cos_theta = cos(rad);
+	float sin_theta = sin(rad);
+
+	float x = point->x;
+	float y = point->y;
+	float z = point->z;
+
+	if (axis == 'x') // Rotation autour de l'axe X
+	{
+		point->y = y * cos_theta - z * sin_theta;
+		point->z = y * sin_theta + z * cos_theta;
+	}
+	else if (axis == 'y') // Rotation autour de l'axe Y
+	{
+		point->x = x * cos_theta + z * sin_theta;
+		point->z = -x * sin_theta + z * cos_theta;
+	}
+	else if (axis == 'z') // Rotation autour de l'axe Z
+	{
+		point->x = x * cos_theta - y * sin_theta;
+		point->y = x * sin_theta + y * cos_theta;
+	}
+}
+
+void	rotate_points(t_app *app, char axis, float angle)
+{
+	int x = 0;
+
+	while (x < app->nb_rows)
+	{
+		int y = 0;
+		while (y < app->nb_cols)
+		{
+			rotate_point(&app->points[x][y], axis, angle);
+			y++;
+		}
+		x++;
+	}
+}
+
 
 void	draw_line(t_point *p1, t_point *p2, t_app *app, int color)
 {
@@ -114,10 +158,15 @@ int	run_app(t_app *app)
 {
 	int x = 0;
 
+	// rotate_points(app, 'x', 90);
+	// rotate_points(app, 'y', 180);
+	// rotate_points(app, 'z', 90);
+
 	draw_axes(app, 100);
 
 	if (app->update)
 		return (0);
+	mlx_clear_window(app->mlx, app->win);
 	while (x < app->nb_rows)
 	{
 		int y = 0;
