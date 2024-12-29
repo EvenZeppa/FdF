@@ -11,14 +11,14 @@ int	init_points(t_app *app, char *file)
 	fd = open(file, O_RDONLY);
 	if (fd < 0)
 		return (ft_printf("Error: open file\n"), 0);
-	app->points = malloc(sizeof(t_point3 *) * 100);
+	app->points = malloc(sizeof(t_point3 *) * 1000);
 	if (!app->points)
 		return (ft_printf("Error: malloc points\n"), 0);
 	x = 0;
 	while ((line = get_next_line(fd)))
 	{
 		split = ft_split(line, ' ');
-		app->points[x] = malloc(sizeof(t_point3) * 100);
+		app->points[x] = malloc(sizeof(t_point3) * 1000);
 		if (!app->points[x])
 			return (ft_printf("Error: malloc points[%d]\n", x), 0);
 		y = 0;
@@ -49,7 +49,7 @@ int		init_app(t_app *app, char *file)
 	app->camera = create_camera();
 	if (!init_points(app, file))
 		return (0);
-	app->near_fog = 15.0f;
+	app->near_fog = 40.0f;
 	app->far_fog = 50.0f;
 	app->fog_color = 0x000000;
 

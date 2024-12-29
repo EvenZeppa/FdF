@@ -104,50 +104,24 @@ int	is_point_in_frustum(t_vec4 point, float near_plane, float far_plane) {
 			point.z >= near_plane && point.z <= far_plane;
 }
 
-float normalize_depth(float z, float near_plane, float far_plane) {
-    // Normalisation de z entre near_plane et far_plane
-    if (z < near_plane) z = near_plane;
-    if (z > far_plane) z = far_plane;
-    return 1.0f - (z - near_plane) / (far_plane - near_plane);
-}
-
-float adjust_contrast(float intensity, float contrast) {
-    // La valeur de contraste (> 1.0 augmente le contraste, < 1.0 réduit le contraste)
-    return pow(intensity, contrast);
-}
-
-
-int calculate_color(float intensity) {
-    // Clamp l'intensité entre 0.0 et 1.0
-    if (intensity < 0.0f) intensity = 0.0f;
-    if (intensity > 1.0f) intensity = 1.0f;
-
-    // Calcule une valeur de gris en fonction de l'intensité
-    int color = (int)(intensity * 255.0f);
-    return (color << 16) | (color << 8) | color; // Gris : RGB égaux
-}
-
 int apply_fog(int original_color, float distance, float near_fog, float far_fog, int fog_color) {
-    // Calcul de l'intensité du fog
-    float f = (distance - near_fog) / (far_fog - near_fog);
-    if (f < 0.0f) f = 0.0f; // Pas de fog
-    if (f > 1.0f) f = 1.0f; // Fog complet
+	float f = (distance - near_fog) / (far_fog - near_fog);
+	if (f < 0.0f) f = 0.0f;
+	if (f > 1.0f) f = 1.0f;
 
-    // Séparation des composantes des couleurs
-    int r1 = (original_color >> 16) & 0xFF;
-    int g1 = (original_color >> 8) & 0xFF;
-    int b1 = original_color & 0xFF;
+	int r1 = (original_color >> 16) & 0xFF;
+	int g1 = (original_color >> 8) & 0xFF;
+	int b1 = original_color & 0xFF;
 
-    int r2 = (fog_color >> 16) & 0xFF;
-    int g2 = (fog_color >> 8) & 0xFF;
-    int b2 = fog_color & 0xFF;
+	int r2 = (fog_color >> 16) & 0xFF;
+	int g2 = (fog_color >> 8) & 0xFF;
+	int b2 = fog_color & 0xFF;
 
-    // Interpolation des couleurs
-    int r = (int)(r1 * (1 - f) + r2 * f);
-    int g = (int)(g1 * (1 - f) + g2 * f);
-    int b = (int)(b1 * (1 - f) + b2 * f);
+	int r = (int)(r1 * (1 - f) + r2 * f);
+	int g = (int)(g1 * (1 - f) + g2 * f);
+	int b = (int)(b1 * (1 - f) + b2 * f);
 
-    return (r << 16) | (g << 8) | b;
+	return (r << 16) | (g << 8) | b;
 }
 
 
@@ -164,10 +138,6 @@ void	draw_line(t_app *app, t_vec4 a, t_vec4 b) {
 		float e2;
 
 		while (TRUE) {
-			// float intensity = normalize_depth(a.z, app->camera.near_plane, app->camera.far_plane);
-			// intensity = adjust_contrast(intensity, 1.0f);
-			// int color = calculate_color(intensity);
-			
 			int color = apply_fog(0xFFFFFF, a.w, app->near_fog, app->far_fog, app->fog_color);
 			if (color == 0)
 				break;
