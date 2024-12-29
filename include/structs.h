@@ -1,54 +1,66 @@
 #ifndef STRUCTS_H
 # define STRUCTS_H
 
-// 3d point structure
-typedef struct	s_point
+typedef struct	s_vec3
 {
-	int	x;
-	int	y;
-	int	z;
-}	t_point;
+	float x;
+	float y;
+	float z;
+}	t_vec3;
 
-// Plane structure
-typedef struct	s_plane
+typedef struct	s_vec4
 {
-	float	vx;
-	float	vy;
-	float	vz;
-	float	vo;
-}	t_plane;
+	float x;
+	float y;
+	float z;
+	float w;
+}	t_vec4;
 
-// Rectangle structure
-typedef struct	s_rect
+typedef struct	s_mat4
 {
-	int	x;
-	int	y;
-	int	w;
-	int	h;
-}	t_rect;
+	float m[4][4];
+}	t_mat4;
 
-// Application structure
+typedef struct	s_camera
+{
+	t_vec3	pos;
+	t_vec3	target;
+	t_vec3	up;
+	float	fov;
+	float	aspect_ratio;
+	float	near_plane;
+	float	far_plane;
+}	t_camera;
+
+typedef struct	s_point2
+{
+	float	x;
+	float	y;
+	float	z;
+}	t_point2;
+
+typedef struct	s_point3
+{
+	float	x;
+	float	y;
+	float	z;
+}	t_point3;
+
 typedef struct	s_app
 {
 	void	*mlx;
 	void	*win;
 
-	int		update;
-	
-	t_point	**points;
-	int		nb_cols;
-	int		nb_rows;
+	t_camera	camera;
+	t_point3	**points;
+	int			nb_cols;
+	int			nb_rows;
 
-	t_point	origin;
+	float		near_fog;
+	float		far_fog;
+	int			fog_color;
 
-	t_plane	*p_plane;
-	t_point	*p_center;
-	t_rect	*p_win;
-
-	int		mouse_x;
-	int		mouse_y;
-	int		prev_mouse_x;
-	int		prev_mouse_y;
+	int			is_update;
 }	t_app;
 
 #endif

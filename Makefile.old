@@ -3,11 +3,9 @@ CFLAGS = -g -Wall -Wextra -Werror -Iinclude
 LDFLAGS = -lmlx -lXext -lX11 -lm
 SRCS =	get_next_line.c get_next_line_utils.c \
 		src/main.c\
-		src/vector.c\
-		src/matrix.c\
-		src/camera.c\
-		src/events.c\
-		src/memory.c
+		src/init.c\
+		src/free.c\
+		src/run.c
 NAME = fdf
 
 all: $(NAME)
