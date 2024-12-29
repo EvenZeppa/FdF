@@ -59,6 +59,17 @@ int	key_hook(int keycode, t_app *app)
 	return (0);
 }
 
+int	mouse_move_hook(int x, int y, t_app *app)
+{
+	app->prev_mouse_x = app->mouse_x;
+	app->prev_mouse_y = app->mouse_y;
+	app->mouse_x = x;
+	app->mouse_y = y;
+	update_projection_plane(app);
+	app->update = 0;
+	return (0);
+}
+
 int	main(int ac, char **av)
 {
 	t_app	app;
@@ -71,9 +82,13 @@ int	main(int ac, char **av)
 		return (free_app(&app), 1);
 	if (!init_proj(&app))
 		return (free_app(&app), 1);
+
+	// mlx_mouse_get_pos(app.mlx, app.win, &app.mouse_x, &app.mouse_y);
+	// ft_printf("Mouse pos x: %d, y: %d\n", app.mouse_x, app.mouse_y);
 	
 	mlx_loop_hook(app.mlx, run_app, &app);
 	mlx_hook(app.win, 2, 1L << 0, key_hook, &app);
+	mlx_hook(app.win, 6, 1L << 6, mouse_move_hook, &app);
 
 	mlx_loop(app.mlx);
 

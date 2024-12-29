@@ -12,10 +12,10 @@ typedef struct	s_point
 // Plane structure
 typedef struct	s_plane
 {
-	int	vx;
-	int	vy;
-	int	vz;
-	int	vo;
+	float	vx;
+	float	vy;
+	float	vz;
+	float	vo;
 }	t_plane;
 
 // Rectangle structure
@@ -44,6 +44,11 @@ typedef struct	s_app
 	t_plane	*p_plane;
 	t_point	*p_center;
 	t_rect	*p_win;
+
+	int		mouse_x;
+	int		mouse_y;
+	int		prev_mouse_x;
+	int		prev_mouse_y;
 }	t_app;
 
 #endif

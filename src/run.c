@@ -177,6 +177,31 @@ int cohen_sutherland_clip(t_point *p1, t_point *p2, t_rect *screen)
 	return is_accept;
 }
 
+void rotate_vector(float *vx, float *vy, float *vz, float delta_x, float delta_y)
+{
+	// Rotation autour de l'axe Y (delta_x affecte Y)
+	float new_vx = *vx * cos(delta_x) - *vz * sin(delta_x);
+	float new_vz = *vx * sin(delta_x) + *vz * cos(delta_x);
+	*vx = new_vx;
+	*vz = new_vz;
+
+	// Rotation autour de l'axe X (delta_y affecte X)
+	float new_vy = *vy * cos(delta_y) - *vz * sin(delta_y);
+	*vz = *vy * sin(delta_y) + *vz * cos(delta_y);
+	*vy = new_vy;
+}
+
+void update_projection_plane(t_app *app)
+{
+	float delta_x = (app->mouse_x - app->prev_mouse_x) * 0.01;
+	float delta_y = (app->mouse_y - app->prev_mouse_y) * 0.01;
+
+	rotate_vector(&app->p_plane->vx, &app->p_plane->vy, &app->p_plane->vz, delta_x, delta_y);
+
+	app->prev_mouse_x = app->mouse_x;
+	app->prev_mouse_y = app->mouse_y;
+}
+
 void	draw_line(t_point *p1, t_point *p2, t_app *app, int color)
 {
 	t_point p_point1;
@@ -185,16 +210,16 @@ void	draw_line(t_point *p1, t_point *p2, t_app *app, int color)
 	convert_to_screen_point(p1, app->p_win, &p_point1);
 	convert_to_screen_point(p2, app->p_win, &p_point2);
 
-	int dx = abs(p_point2.x - p_point1.x);
+	int dx = abs((int)(p_point2.x - p_point1.x));
 	int sx = p_point1.x < p_point2.x ? 1 : -1;
-	int dy = -abs(p_point2.y - p_point1.y);
+	int dy = -abs((int)(p_point2.y - p_point1.y));
 	int sy = p_point1.y < p_point2.y ? 1 : -1;
 	int err = dx + dy;
 	int e2;
 
 	while (TRUE)
 	{
-		mlx_pixel_put(app->mlx, app->win, p_point1.x, p_point1.y, color);
+		mlx_pixel_put(app->mlx, app->win, (int)p_point1.x, (int)p_point1.y, color);
 		if (p_point1.x == p_point2.x && p_point1.y == p_point2.y)
 			break;
 		e2 = 2 * err;

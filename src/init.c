@@ -22,6 +22,11 @@ int	init_app(t_app *app)
 	app->p_plane = NULL;
 	app->p_center = NULL;
 	app->p_win = NULL;
+
+	app->mouse_x = 0;
+	app->mouse_y = 0;
+	app->prev_mouse_x = 0;
+	app->prev_mouse_y = 0;
 	return (1);
 }
 
@@ -68,16 +73,16 @@ int	init_proj(t_app *app)
 	app->p_plane = malloc(sizeof(t_plane));
 	if (!app->p_plane)
 		return (ft_printf("Error: malloc p_plane\n"), 0);
-	app->p_plane->vx = 0;
-	app->p_plane->vy = 0;
-	app->p_plane->vz = 4;
-	app->p_plane->vo = 10;
+	app->p_plane->vx = 1000;
+	app->p_plane->vy = 1000;
+	app->p_plane->vz = 1000;
+	app->p_plane->vo = 0;
 
 	app->p_center = malloc(sizeof(t_point));
 	if (!app->p_center)
 		return (ft_printf("Error: malloc p_center\n"), 0);
-	app->p_center->x = 10000;
-	app->p_center->y = 10000;
+	app->p_center->x = 1000;
+	app->p_center->y = 1000;
 	app->p_center->z = 40000;
 
 	app->p_win = malloc(sizeof(t_rect));
