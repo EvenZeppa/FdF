@@ -1,7 +1,12 @@
 #include "fdf.h"
 
-t_point2 project_to_screen(t_vec3 point, int screen_width, int screen_height) {
-	t_point2 result;
+typedef struct t_triangle
+{
+	t_vec3	vertices[3];
+}	t_triangle;
+
+t_vec3 project_to_screen(t_vec3 point, int screen_width, int screen_height) {
+	t_vec3 result;
 
 	result.x = (point.x + 1.0f) * 0.5f * screen_width;
 	result.y = (1.0f - (point.y + 1.0f) * 0.5f) * screen_height; // Inverse pour adapter l'origine (haut-gauche)
@@ -9,150 +14,38 @@ t_point2 project_to_screen(t_vec3 point, int screen_width, int screen_height) {
 	return result;
 }
 
-int compute_region_code(t_vec4 point, t_camera *camera) {
-	int code = 0;
+#include <stdint.h>
 
-	if (point.x < -point.w) code |= 1 << 3; // Gauche
-	if (point.x > point.w)  code |= 1 << 2; // Droite
-	if (point.y < -point.w) code |= 1 << 1; // Bas
-	if (point.y > point.w)  code |= 1 << 0; // Haut
-	if (point.z < camera->near_plane) code |= 1 << 4; // Près
-	if (point.z > camera->far_plane)  code |= 1 << 5; // Loin
+void rasterize_triangle(t_vec3 v1, t_vec3 v2, t_vec3 v3, uint32_t* framebuffer, float* zbuffer, uint32_t color) {
+	// Calcul du rectangle englobant
+	int xmin = fmax(0, floorf(fminf(v1.x, fminf(v2.x, v3.x))));
+	int xmax = fmin(WIN_WIDTH - 1, ceilf(fmaxf(v1.x, fmaxf(v2.x, v3.x))));
+	int ymin = fmax(0, floorf(fminf(v1.y, fminf(v2.y, v3.y))));
+	int ymax = fmin(WIN_HEIGHT - 1, ceilf(fmaxf(v1.y, fmaxf(v2.y, v3.y))));
 
-	return code;
-}
+	// Pré-calcul du dénominateur pour les coordonnées barycentriques
+	float denom = (v2.y - v3.y) * (v1.x - v3.x) + (v3.x - v2.x) * (v1.y - v3.y);
 
-t_vec4	compute_intersection(t_vec4 a, t_vec4 b, float plane, char axis) {
-	t_vec4 result;
+	// Parcourir les pixels dans le rectangle englobant
+	for (int y = ymin; y <= ymax; y++) {
+		for (int x = xmin; x <= xmax; x++) {
+			// Calcul des coordonnées barycentriques
+			float alpha = ((v2.y - v3.y) * (x - v3.x) + (v3.x - v2.x) * (y - v3.y)) / denom;
+			float beta = ((v3.y - v1.y) * (x - v3.x) + (v1.x - v3.x) * (y - v3.y)) / denom;
+			float gamma = 1.0f - alpha - beta;
 
-	if (axis == 'x') {
-		if (b.x - a.x < 0.0001f) {
-			return a;
-		}
-		result.x = plane;
-		result.y = a.y + (b.y - a.y) * (plane - a.x) / (b.x - a.x);
-		result.z = a.z + (b.z - a.z) * (plane - a.x) / (b.x - a.x);
-		result.w = a.w + (b.w - a.w) * (plane - a.x) / (b.x - a.x);
-	} else if (axis == 'y') {
-		if (b.y - a.y < 0.0001f) {
-			return a;
-		}
-		result.x = a.x + (b.x - a.x) * (plane - a.y) / (b.y - a.y);
-		result.y = plane;
-		result.z = a.z + (b.z - a.z) * (plane - a.y) / (b.y - a.y);
-		result.w = a.w + (b.w - a.w) * (plane - a.y) / (b.y - a.y);
-	} else if (axis == 'z') {
-		if (b.z - a.z < 0.0001f) {
-			return a;
-		}
-		result.x = a.x + (b.x - a.x) * (plane - a.z) / (b.z - a.z);
-		result.y = a.y + (b.y - a.y) * (plane - a.z) / (b.z - a.z);
-		result.z = plane;
-		result.w = a.w + (b.w - a.w) * (plane - a.z) / (b.z - a.z);
-	}
+			// Vérification si le pixel est dans le triangle
+			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+				// Interpolation de la profondeur (z)
+				float z = alpha * v1.z + beta * v2.z + gamma * v3.z;
 
-	return result;
-}
-
-int	cohen_sutherland_clip(t_vec4 *a, t_vec4 *b, t_camera *camera) {
-	int code_a = compute_region_code(*a, camera);
-	int code_b = compute_region_code(*b, camera);
-
-	while (TRUE) {
-		// Cas trivial : totalement à l'intérieur
-		if (code_a == 0 && code_b == 0) {
-			return TRUE; // La ligne est visible
-		}
-
-		// Cas trivial : totalement à l'extérieur
-		if (code_a & code_b) {
-			return FALSE; // La ligne est invisible
-		}
-		// Clipping nécessaire
-		int code_out = code_a ? code_a : code_b;
-		t_vec4 intersection;
-
-		// Intersection avec les plans du frustum
-		if (code_out & (1 << 3)) { // Gauche
-			intersection = compute_intersection(*a, *b, -a->w, 'x');
-		} else if (code_out & (1 << 2)) { // Droite
-			intersection = compute_intersection(*a, *b, b->w, 'x');
-		} else if (code_out & (1 << 1)) { // Bas
-			intersection = compute_intersection(*a, *b, -a->w, 'y');
-		} else if (code_out & (1 << 0)) { // Haut
-			intersection = compute_intersection(*a, *b, b->w, 'y');
-		} else if (code_out & (1 << 4)) { // Près
-			intersection = compute_intersection(*a, *b, camera->near_plane, 'z');
-		} else if (code_out & (1 << 5)) { // Loin
-			intersection = compute_intersection(*a, *b, camera->far_plane, 'z');
-		}
-
-		// Mettre à jour les points
-		if (code_out == code_a) {
-			*a = intersection;
-			code_a = compute_region_code(*a, camera);
-		} else {
-			*b = intersection;
-			code_b = compute_region_code(*b, camera);
-		}
-	}
-}
-
-int	is_point_in_frustum(t_vec4 point, float near_plane, float far_plane) {
-	return point.x >= -point.w && point.x <= point.w &&
-			point.y >= -point.w && point.y <= point.w &&
-			point.z >= near_plane && point.z <= far_plane;
-}
-
-int apply_fog(int original_color, float distance, float near_fog, float far_fog, int fog_color) {
-	float f = (distance - near_fog) / (far_fog - near_fog);
-	if (f < 0.0f) f = 0.0f;
-	if (f > 1.0f) f = 1.0f;
-
-	int r1 = (original_color >> 16) & 0xFF;
-	int g1 = (original_color >> 8) & 0xFF;
-	int b1 = original_color & 0xFF;
-
-	int r2 = (fog_color >> 16) & 0xFF;
-	int g2 = (fog_color >> 8) & 0xFF;
-	int b2 = fog_color & 0xFF;
-
-	int r = (int)(r1 * (1 - f) + r2 * f);
-	int g = (int)(g1 * (1 - f) + g2 * f);
-	int b = (int)(b1 * (1 - f) + b2 * f);
-
-	return (r << 16) | (g << 8) | b;
-}
-
-
-void	draw_line(t_app *app, t_vec4 a, t_vec4 b) {
-	if (cohen_sutherland_clip(&a, &b, &app->camera)) {
-		t_point2 p1 = project_to_screen((t_vec3){a.x, a.y, a.z}, WIN_WIDTH, WIN_HEIGHT);
-		t_point2 p2 = project_to_screen((t_vec3){b.x, b.y, b.z}, WIN_WIDTH, WIN_HEIGHT);
-
-		float dx = fabsf(p2.x - p1.x);
-		float sx = p1.x < p2.x ? 1 : -1;
-		float dy = -fabsf(p2.y - p1.y);
-		float sy = p1.y < p2.y ? 1 : -1;
-		float err = dx + dy;
-		float e2;
-
-		while (TRUE) {
-			int color = apply_fog(0xFFFFFF, a.w, app->near_fog, app->far_fog, app->fog_color);
-			if (color == 0)
-				break;
-			mlx_pixel_put(app->mlx, app->win, p1.x, p1.y, color);
-			if (fabs(p1.x - p2.x) < EPSILON && fabs(p1.y - p2.y) < EPSILON) {
-				break;
-			}
-			e2 = 2 * err;
-			if (e2 >= dy) {
-				err += dy;
-				p1.x += sx;
-			}
-			if (e2 <= dx) {
-				err += dx;
-				p1.y += sy;
+				// Test de profondeur avec le Z-buffer
+				int index = y * WIN_WIDTH + x;
+				if (z && (!zbuffer[index] || z < zbuffer[index])) {
+					// Mise à jour du Z-buffer et du framebuffer
+					zbuffer[index] = z;
+					framebuffer[index] = color;
+				}
 			}
 		}
 	}
@@ -160,11 +53,6 @@ void	draw_line(t_app *app, t_vec4 a, t_vec4 b) {
 
 int	render(t_app *app)
 {
-	// mlx_mouse_hide(app->mlx, app->win);
-	// if (app->mouse_x != WIN_WIDTH / 2 || app->mouse_y != WIN_HEIGHT / 2)
-		// mlx_mouse_move(app->mlx, app->win, WIN_WIDTH / 2, WIN_HEIGHT / 2);
-	// mlx_mouse_show(app->mlx, app->win);
-
 	if (!app->is_update)
 	{
 		t_mat4 view_matrix = mat4_look_at(app->camera.pos, app->camera.target, app->camera.up);
@@ -172,36 +60,55 @@ int	render(t_app *app)
 		t_mat4 view_projection_matrix = mat4_multiply(projection_matrix, view_matrix);
 
 		mlx_clear_window(app->mlx, app->win);
-		int x = 0;
-		while (x < app->nb_rows)
-		{
-			int y = 0;
-			while (y < app->nb_cols)
-			{
-				t_vec4 v = mat4_transform_point(view_projection_matrix, (t_vec4){app->points[x][y].x, app->points[x][y].y, app->points[x][y].z, 1.0f});
-				if (!is_point_in_frustum(v, app->camera.near_plane, app->camera.far_plane))
-				{
-					y++;
-					continue;
-				}
 
-				// t_point2 p = project_to_screen((t_vec3){v.x, v.y, v.z}, WIN_WIDTH, WIN_HEIGHT);
-				// mlx_pixel_put(app->mlx, app->win, p.x, p.y, 0xFFFFFF);
+		uint32_t framebuffer[WIN_WIDTH * WIN_HEIGHT] = {0};
+		float zbuffer[WIN_WIDTH * WIN_HEIGHT] = {0}; 
 
-				if (x != app->nb_rows - 1)
-				{
-					t_vec4 v2 = mat4_transform_point(view_projection_matrix, (t_vec4){app->points[x + 1][y].x, app->points[x + 1][y].y, app->points[x + 1][y].z, 1.0f});
-					draw_line(app, v, v2);
-				}
-				if (y != app->nb_cols - 1)
-				{
-					t_vec4 v2 = mat4_transform_point(view_projection_matrix, (t_vec4){app->points[x][y + 1].x, app->points[x][y + 1].y, app->points[x][y + 1].z, 1.0f});
-					draw_line(app, v, v2);
-				}
-				y++;
+		t_triangle t1 = {
+			.vertices = {
+				{.x = -0.5f, .y = -0.5f, .z = 0.0f},
+				{.x = 0.5f, .y = -0.5f, .z = 0.0f},
+				{.x = 0.0f, .y = 0.5f, .z = 0.0f}
 			}
-			x++;
-		}
+		};
+
+		t_triangle t2 = {
+			.vertices = {
+				{.x = -1.0f, .y = -1.0f, .z = 10.0f},
+				{.x = 1.0f, .y = -1.0f, .z = 10.0f},
+				{.x = 0.0f, .y = 1.0f, .z = 0.0f}
+			}
+		};
+
+		t_vec4 v1 = mat4_transform_point(view_projection_matrix, (t_vec4){t1.vertices[0].x, t1.vertices[0].y, t1.vertices[0].z, 1.0f});
+		t_vec4 v2 = mat4_transform_point(view_projection_matrix, (t_vec4){t1.vertices[1].x, t1.vertices[1].y, t1.vertices[1].z, 1.0f});
+		t_vec4 v3 = mat4_transform_point(view_projection_matrix, (t_vec4){t1.vertices[2].x, t1.vertices[2].y, t1.vertices[2].z, 1.0f});
+		
+		rasterize_triangle(
+			project_to_screen((t_vec3){v1.x, v1.y, v1.z}, WIN_WIDTH, WIN_HEIGHT),
+			project_to_screen((t_vec3){v2.x, v2.y, v2.z}, WIN_WIDTH, WIN_HEIGHT),
+			project_to_screen((t_vec3){v3.x, v3.y, v3.z}, WIN_WIDTH, WIN_HEIGHT),
+			framebuffer,
+			zbuffer,
+			0xFFFFFF
+		);
+
+		v1 = mat4_transform_point(view_projection_matrix, (t_vec4){t2.vertices[0].x, t2.vertices[0].y, t2.vertices[0].z, 1.0f});
+		v2 = mat4_transform_point(view_projection_matrix, (t_vec4){t2.vertices[1].x, t2.vertices[1].y, t2.vertices[1].z, 1.0f});
+		v3 = mat4_transform_point(view_projection_matrix, (t_vec4){t2.vertices[2].x, t2.vertices[2].y, t2.vertices[2].z, 1.0f});
+
+		rasterize_triangle(
+			project_to_screen((t_vec3){v1.x, v1.y, v1.z}, WIN_WIDTH, WIN_HEIGHT),
+			project_to_screen((t_vec3){v2.x, v2.y, v2.z}, WIN_WIDTH, WIN_HEIGHT),
+			project_to_screen((t_vec3){v3.x, v3.y, v3.z}, WIN_WIDTH, WIN_HEIGHT),
+			framebuffer,
+			zbuffer,
+			0xFF0000
+		);
+
+		for (int i = 0; i < WIN_WIDTH * WIN_HEIGHT; i++)
+			mlx_pixel_put(app->mlx, app->win, i % WIN_WIDTH, i / WIN_WIDTH, framebuffer[i]);
+
 		app->is_update = 1;
 	}
 	return (0);
