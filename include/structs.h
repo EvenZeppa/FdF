@@ -60,6 +60,11 @@ typedef struct	s_app
 	float		far_fog;
 	int			fog_color;
 
+	int			prev_mouse_x;
+	int			prev_mouse_y;
+	int			mouse_x;
+	int			mouse_y;
+
 	int			is_update;
 }	t_app;
 

@@ -160,6 +160,11 @@ void	draw_line(t_app *app, t_vec4 a, t_vec4 b) {
 
 int	render(t_app *app)
 {
+	// mlx_mouse_hide(app->mlx, app->win);
+	// if (app->mouse_x != WIN_WIDTH / 2 || app->mouse_y != WIN_HEIGHT / 2)
+		// mlx_mouse_move(app->mlx, app->win, WIN_WIDTH / 2, WIN_HEIGHT / 2);
+	// mlx_mouse_show(app->mlx, app->win);
+
 	if (!app->is_update)
 	{
 		t_mat4 view_matrix = mat4_look_at(app->camera.pos, app->camera.target, app->camera.up);
@@ -206,12 +211,12 @@ int	main()
 {
 	t_app	app;
 
-	if (!init_app(&app, "test_maps/50-4.fdf"))
+	if (!init_app(&app, "test_maps/42.fdf"))
 		return (0);
 
 	mlx_hook(app.win, 17, 0, exit_program, &app);
 	mlx_hook(app.win, 2, 1L << 0, key_press, &app);
-
+	// mlx_hook(app.win, 6, 1L << 6, mouse_move, &app);
 
 	mlx_loop_hook(app.mlx, render, &app);
 	mlx_loop(app.mlx);
