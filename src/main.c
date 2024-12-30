@@ -211,7 +211,7 @@ int	main()
 {
 	t_app	app;
 
-	if (!init_app(&app, "test_maps/42.fdf"))
+	if (!init_app(&app, "test_maps/elem-col.fdf"))
 		return (0);
 
 	mlx_hook(app.win, 17, 0, exit_program, &app);
