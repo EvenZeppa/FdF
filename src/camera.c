@@ -5,7 +5,7 @@
 t_camera	create_camera()
 {
 	t_camera	camera = {
-		.pos = {10.0f, 10.0f, 20.0f},  // Position au centre
+		.pos = {10.0f, 10.0f, 15.0f},  // Position au centre
 		.target = {0.0f, 0.0f, 0.0f},   // Direction vers l'axe Z négatif
 		.up = {0.0f, 0.0f, 1.0f},        // Haut aligné avec l'axe Y
 		.fov = 90.0f,                    // Champ de vision de 90°
