@@ -1,4 +1,5 @@
 #include "fdf.h"
+#include <stdint.h>
 
 typedef struct t_triangle
 {
@@ -110,83 +111,81 @@ int	is_point_in_frustum(t_vec4 point, float near_plane, float far_plane) {
 			point.z >= near_plane && point.z <= far_plane;
 }
 
-#include <stdint.h>
-
 void rasterize_triangle(t_vec3 v1, t_vec3 v2, t_vec3 v3, uint32_t* framebuffer, float* zbuffer, uint32_t color) {
-    // Calcul du rectangle englobant
-    int xmin = fmax(0, floorf(fminf(v1.x, fminf(v2.x, v3.x))));
-    int xmax = fmin(WIN_WIDTH - 1, ceilf(fmaxf(v1.x, fmaxf(v2.x, v3.x))));
-    int ymin = fmax(0, floorf(fminf(v1.y, fminf(v2.y, v3.y))));
-    int ymax = fmin(WIN_HEIGHT - 1, ceilf(fmaxf(v1.y, fmaxf(v2.y, v3.y))));
+	// Calcul du rectangle englobant
+	int xmin = fmax(0, floorf(fminf(v1.x, fminf(v2.x, v3.x))));
+	int xmax = fmin(WIN_WIDTH - 1, ceilf(fmaxf(v1.x, fmaxf(v2.x, v3.x))));
+	int ymin = fmax(0, floorf(fminf(v1.y, fminf(v2.y, v3.y))));
+	int ymax = fmin(WIN_HEIGHT - 1, ceilf(fmaxf(v1.y, fmaxf(v2.y, v3.y))));
 
-    // Pré-calcul du dénominateur pour les coordonnées barycentriques
-    float denom = (v2.y - v3.y) * (v1.x - v3.x) + (v3.x - v2.x) * (v1.y - v3.y);
+	// Pré-calcul du dénominateur pour les coordonnées barycentriques
+	float denom = (v2.y - v3.y) * (v1.x - v3.x) + (v3.x - v2.x) * (v1.y - v3.y);
 
-    // Parcourir les pixels dans le rectangle englobant
-    for (int y = ymin; y <= ymax; y++) {
-        for (int x = xmin; x <= xmax; x++) {
-            // Calcul des coordonnées barycentriques
-            float alpha = ((v2.y - v3.y) * (x - v3.x) + (v3.x - v2.x) * (y - v3.y)) / denom;
-            float beta = ((v3.y - v1.y) * (x - v3.x) + (v1.x - v3.x) * (y - v3.y)) / denom;
-            float gamma = 1.0f - alpha - beta;
+	// Parcourir les pixels dans le rectangle englobant
+	for (int y = ymin; y <= ymax; y++) {
+		for (int x = xmin; x <= xmax; x++) {
+			// Calcul des coordonnées barycentriques
+			float alpha = ((v2.y - v3.y) * (x - v3.x) + (v3.x - v2.x) * (y - v3.y)) / denom;
+			float beta = ((v3.y - v1.y) * (x - v3.x) + (v1.x - v3.x) * (y - v3.y)) / denom;
+			float gamma = 1.0f - alpha - beta;
 
-            // Vérification si le pixel est dans le triangle
-            if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-                // Interpolation de la profondeur (z)
-                float z = alpha * v1.z + beta * v2.z + gamma * v3.z;
+			// Vérification si le pixel est dans le triangle
+			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+				// Interpolation de la profondeur (z)
+				float z = alpha * v1.z + beta * v2.z + gamma * v3.z;
 
-                // Test de profondeur avec le Z-buffer
-                int index = y * WIN_WIDTH + x;
-                if (z && (!zbuffer[index] || z < zbuffer[index])) {
-                    zbuffer[index] = z;
+				// Test de profondeur avec le Z-buffer
+				int index = y * WIN_WIDTH + x;
+				if (z && (!zbuffer[index] || z < zbuffer[index] + 0.1f)) {
+					zbuffer[index] = z;
 					framebuffer[index] = color; // Couleur pour les arêtes
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
 }
 
 void draw_line(t_vec3 p1, t_vec3 p2, uint32_t* framebuffer, float* zbuffer, uint32_t color) {
-    int x1 = roundf(p1.x);
-    int y1 = roundf(p1.y);
-    int x2 = roundf(p2.x);
-    int y2 = roundf(p2.y);
+	int x1 = roundf(p1.x);
+	int y1 = roundf(p1.y);
+	int x2 = roundf(p2.x);
+	int y2 = roundf(p2.y);
 
-    int dx = abs(x2 - x1);
-    int dy = abs(y2 - y1);
-    int sx = (x1 < x2) ? 1 : -1;
-    int sy = (y1 < y2) ? 1 : -1;
+	int dx = abs(x2 - x1);
+	int dy = abs(y2 - y1);
+	int sx = (x1 < x2) ? 1 : -1;
+	int sy = (y1 < y2) ? 1 : -1;
 
-    int err = dx - dy;
-    while (TRUE) {
-        int index = y1 * WIN_WIDTH + x1;
+	int err = dx - dy;
+	while (TRUE) {
+		int index = y1 * WIN_WIDTH + x1;
 
-        // Test du Z-buffer
-        if (x1 >= 0 && x1 < WIN_WIDTH && y1 >= 0 && y1 < WIN_HEIGHT) {
-            if (!zbuffer[index] || p1.z <= zbuffer[index] + 0.1f) {
-                zbuffer[index] = p1.z;
-                framebuffer[index] = color;
-            }
-        }
+		// Test du Z-buffer
+		if (x1 >= 0 && x1 < WIN_WIDTH && y1 >= 0 && y1 < WIN_HEIGHT) {
+			if (!zbuffer[index] || p1.z <= zbuffer[index] + 0.1f) {
+				zbuffer[index] = p1.z;
+				framebuffer[index] = color;
+			}
+		}
 
-        if (x1 == x2 && y1 == y2) break;
-        int e2 = 2 * err;
-        if (e2 > -dy) {
-            err -= dy;
-            x1 += sx;
-        }
-        if (e2 < dx) {
-            err += dx;
-            y1 += sy;
-        }
-    }
+		if (x1 == x2 && y1 == y2) break;
+		int e2 = 2 * err;
+		if (e2 > -dy) {
+			err -= dy;
+			x1 += sx;
+		}
+		if (e2 < dx) {
+			err += dx;
+			y1 += sy;
+		}
+	}
 }
 
 void rasterize_wireframe_triangle(t_vec3 v1, t_vec3 v2, t_vec3 v3, uint32_t* framebuffer, float* zbuffer, uint32_t color) {
-    // Tracer les trois arêtes du triangle
-    draw_line(v1, v2, framebuffer, zbuffer, color);
-    // draw_line(v2, v3, framebuffer, zbuffer, color);
-    draw_line(v3, v1, framebuffer, zbuffer, color);
+	// Tracer les trois arêtes du triangle
+	draw_line(v1, v2, framebuffer, zbuffer, color);
+	// draw_line(v2, v3, framebuffer, zbuffer, color);
+	draw_line(v3, v1, framebuffer, zbuffer, color);
 }
 
 t_triangle create_triangle(t_vec3 v1, t_vec3 v2, t_vec3 v3) {
@@ -198,71 +197,70 @@ t_triangle create_triangle(t_vec3 v1, t_vec3 v2, t_vec3 v3) {
 }
 
 // Fonction pour transformer la matrice en triangles
-t_triangle* generate_triangles(int rows, int cols, float* heightmap, int* out_triangle_count) {
-    int max_triangles = rows * cols * 4; // Maximum possible triangles
-    t_triangle* triangles = malloc(max_triangles * sizeof(t_triangle));
-    int count = 0;
+t_triangle* generate_triangles(int rows, int cols, t_vec3* points, int* out_triangle_count) {
+	int max_triangles = rows * cols * 4; // Maximum possible triangles
+	t_triangle* triangles = malloc(max_triangles * sizeof(t_triangle));
+	int count = 0;
 
-    for (int y = 0; y < rows; y++) {
-        for (int x = 0; x < cols; x++) {
-            // Points adjacents dans la matrice
-            t_vec3 p1 = {x, y, heightmap[y * cols + x]};
-            t_vec3 pxm = {.x = -1};
-            t_vec3 pxp = {.x = -1};
-            t_vec3 pym = {.x = -1};
-            t_vec3 pyp = {.x = -1};
-			// t_vec3 p2 = {x + 1, y, heightmap[y * cols + (x + 1)]};
-            // t_vec3 p3 = {x, y + 1, heightmap[(y + 1) * cols + x]};
-            // t_vec3 p4 = {x + 1, y + 1, heightmap[(y + 1) * cols + (x + 1)]};
+	for (int y = 0; y < rows; y++) {
+		for (int x = 0; x < cols; x++) {
+			// Points adjacents dans la matrice
+			// t_vec3 p1 = {x, y, heightmap[y * cols + x]};
+			// t_vec3 pxm = {.x = -1};
+			// t_vec3 pxp = {.x = -1};
+			// t_vec3 pym = {.x = -1};
+			// t_vec3 pyp = {.x = -1};
 
-			if (x > 0)
-				pxm = (t_vec3){x - 1, y, heightmap[y * cols + (x - 1)]};
-			if (x < cols)
-				pxp = (t_vec3){x + 1, y, heightmap[y * cols + (x + 1)]};
-			if (y > 0)
-				pym = (t_vec3){x, y - 1, heightmap[(y - 1) * cols + x]};
-			if (y < rows)
-				pyp = (t_vec3){x, y + 1, heightmap[(y + 1) * cols + x]};
+			// if (x > 0)
+			// 	pxm = (t_vec3){x - 1, y, heightmap[y * cols + (x - 1)]};
+			// if (x < cols - 1)
+			// 	pxp = (t_vec3){x + 1, y, heightmap[y * cols + (x + 1)]};
+			// if (y > 0)
+			// 	pym = (t_vec3){x, y - 1, heightmap[(y - 1) * cols + x]};
+			// if (y < rows - 1)
+			// 	pyp = (t_vec3){x, y + 1, heightmap[(y + 1) * cols + x]};
 
 			// Triangle 1
-			if (pxm.x != -1 && pym.x != -1) {
-				triangles[count++] = create_triangle(p1, pxm, pym);
+			if (x > 0 && y > 0) {
+				triangles[count++] = create_triangle(points[y * cols + x], points[(y - 1) * cols + x], points[y * cols + (x - 1)]);
 			}
 			// Triangle 2
-			if (pxm.x != -1 && pyp.x != -1) {
-				triangles[count++] = create_triangle(p1, pyp, pxm);
+			if (x > 0 && y < rows - 1) {
+				triangles[count++] = create_triangle(points[y * cols + x], points[(y + 1) * cols + x], points[y * cols + (x - 1)]);
 			}
 			// Triangle 3
-			if (pxp.x != -1 && pym.x != -1) {
-				triangles[count++] = create_triangle(p1, pym, pxp);
+			if (x < cols - 1 && y < rows - 1) {
+				triangles[count++] = create_triangle(points[y * cols + x], points[(y + 1) * cols + x], points[y * cols + (x + 1)]);
 			}
 			// Triangle 4
-			if (pxp.x != -1 && pyp.x != -1) {
-				triangles[count++] = create_triangle(p1, pxp, pyp);
+			if (x < cols - 1 && y > 0) {
+				triangles[count++] = create_triangle(points[y * cols + x], points[(y - 1) * cols + x], points[y * cols + (x + 1)]);
 			}
-        }
-    }
+		}
+	}
 
-    *out_triangle_count = count;
-    return triangles;
+	*out_triangle_count = count;
+	return triangles;
 }
 
 int	render(t_app *app)
 {
-    int rows = 5, cols = 5;
-    float heightmap[] = {
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 5,
-        0, 0, 5, 5, 5,
-    };
+	// int rows = 5, cols = 5;
+	// float heightmap[] = {
+	// 	0, 0, 0, 0, 0,
+	// 	0, 0, 0, 0, 0,
+	// 	0, 0, 0, 0, 0,
+	// 	0, 0, 0, 0, 0,
+	// 	0, 0, 0, 0, 5,
+	// };
 
-    int triangle_count;
-    t_triangle* triangles = generate_triangles(rows, cols, heightmap, &triangle_count);
 
 	if (!app->is_update)
 	{
+		int triangle_count;
+		// t_triangle* triangles = generate_triangles(rows, cols, heightmap, &triangle_count);
+		t_triangle* triangles = generate_triangles(app->nb_rows, app->nb_cols, app->points, &triangle_count);
+
 		t_mat4 view_matrix = mat4_look_at(app->camera.pos, app->camera.target, app->camera.up);
 		t_mat4 projection_matrix = mat4_perspective(app->camera.fov, app->camera.aspect_ratio, app->camera.near_plane, app->camera.far_plane);
 		t_mat4 view_projection_matrix = mat4_multiply(projection_matrix, view_matrix);
@@ -284,14 +282,14 @@ int	render(t_app *app)
 				cohen_sutherland_clip(&v2, &v3, &app->camera);
 				cohen_sutherland_clip(&v3, &v1, &app->camera);
 
-				rasterize_triangle(
-					project_to_screen((t_vec3){v1.x, v1.y, v1.z}, WIN_WIDTH, WIN_HEIGHT),
-					project_to_screen((t_vec3){v2.x, v2.y, v2.z}, WIN_WIDTH, WIN_HEIGHT),
-					project_to_screen((t_vec3){v3.x, v3.y, v3.z}, WIN_WIDTH, WIN_HEIGHT),
-					framebuffer,
-					zbuffer,
-					0x000001
-				);
+				// rasterize_triangle(
+				// 	project_to_screen((t_vec3){v1.x, v1.y, v1.z}, WIN_WIDTH, WIN_HEIGHT),
+				// 	project_to_screen((t_vec3){v2.x, v2.y, v2.z}, WIN_WIDTH, WIN_HEIGHT),
+				// 	project_to_screen((t_vec3){v3.x, v3.y, v3.z}, WIN_WIDTH, WIN_HEIGHT),
+				// 	framebuffer,
+				// 	zbuffer,
+				// 	0x000001
+				// );
 
 				rasterize_wireframe_triangle(
 					project_to_screen((t_vec3){v1.x, v1.y, v1.z}, WIN_WIDTH, WIN_HEIGHT),
@@ -306,8 +304,8 @@ int	render(t_app *app)
 		for (int i = 0; i < WIN_WIDTH * WIN_HEIGHT; i++)
 			mlx_pixel_put(app->mlx, app->win, i % WIN_WIDTH, i / WIN_WIDTH, framebuffer[i]);
 		app->is_update = 1;
+		free(triangles);
 	}
-    free(triangles);
 
 	return (0);
 }
@@ -316,7 +314,7 @@ int	main()
 {
 	t_app	app;
 
-	if (!init_app(&app, "test_maps/elem-col.fdf"))
+	if (!init_app(&app, "test_maps/42.fdf"))
 		return (0);
 
 	mlx_hook(app.win, 17, 0, exit_program, &app);

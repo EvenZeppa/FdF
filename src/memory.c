@@ -4,37 +4,34 @@ int	init_points(t_app *app, char *file)
 {
 	int		fd;
 	char	*line;
-	int		y;
 	int		x;
 	char	**split;
 
 	fd = open(file, O_RDONLY);
 	if (fd < 0)
 		return (ft_printf("Error: open file\n"), 0);
-	app->points = malloc(sizeof(t_point3 *) * 1000);
-	if (!app->points)
-		return (ft_printf("Error: malloc points\n"), 0);
-	x = 0;
+	app->points = malloc(sizeof(t_vec3) * 250000);
+	app->nb_cols = 0;
+	app->nb_rows = 0;
 	while ((line = get_next_line(fd)))
 	{
 		split = ft_split(line, ' ');
-		app->points[x] = malloc(sizeof(t_point3) * 1000);
-		if (!app->points[x])
-			return (ft_printf("Error: malloc points[%d]\n", x), 0);
-		y = 0;
-		while (split[y])
+		if (!split)
+			return (ft_printf("Error: split\n"), 0);
+		x = 0;
+		while (split[x])
 		{
-			app->points[x][y].x = (float)x;
-			app->points[x][y].y = (float)y;
-			app->points[x][y].z = (float)(ft_atoi(split[y]));
-			y++;
+			app->points[app->nb_rows * app->nb_cols + x] = (t_vec3){x, app->nb_rows, ft_atoi(split[x])};
+			x++;
 		}
-		if (y > app->nb_cols)
-			app->nb_cols = y;
-		x++;
+		if (app->nb_rows == 0)
+			app->nb_cols = x;
+		else if (app->nb_cols != x)
+			return (ft_printf("Error: invalid map\n"), 0);
+		app->nb_rows++;
+		free(line);
+		free(split);
 	}
-	app->nb_rows = x;
-	app->points[x] = NULL;
 	return (1);
 }
 
@@ -64,11 +61,7 @@ void	free_app(t_app *app)
 	if (app->mlx)
 		mlx_destroy_display(app->mlx);
 	if (app->points)
-	{
-		for (int i = 0; app->points[i]; i++)
-			free(app->points[i]);
 		free(app->points);
-	}
 }
 
 int	exit_program(t_app *app)
