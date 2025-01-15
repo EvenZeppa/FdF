@@ -7,6 +7,7 @@
 # include "matrix.h"
 # include <math.h>
 
+void		position_camera(t_vec3* points, int num_points, t_camera* camera);
 t_camera	create_camera();
 void		camera_move_forward(t_camera* camera, float distance);
 void		camera_strafe(t_camera* camera, float distance);

@@ -243,6 +243,9 @@ t_triangle* generate_triangles(int rows, int cols, t_vec3* points, int* out_tria
 	return triangles;
 }
 
+// int triangle_count;
+// t_triangle* triangles;
+
 int	render(t_app *app)
 {
 	// int rows = 5, cols = 5;
@@ -314,8 +317,10 @@ int	main()
 {
 	t_app	app;
 
-	if (!init_app(&app, "test_maps/42.fdf"))
+	if (!init_app(&app, "test_maps/julia.fdf"))
 		return (0);
+
+	// triangles = generate_triangles(app.nb_rows, app.nb_cols, app.points, &triangle_count);
 
 	mlx_hook(app.win, 17, 0, exit_program, &app);
 	mlx_hook(app.win, 2, 1L << 0, key_press, &app);

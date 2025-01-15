@@ -2,11 +2,40 @@
 
 #include <stdio.h>
 
+void	position_camera(t_vec3* points, int num_points, t_camera* camera) {
+	// Step 1: Compute bounding box
+	float min_x = +INFINITY, min_y = +INFINITY, min_z = +INFINITY;
+	float max_x = -INFINITY, max_y = -INFINITY, max_z = -INFINITY;
+
+	for (int i = 0; i < num_points; i++) {
+		min_x = fminf(min_x, points[i].x);
+		min_y = fminf(min_y, points[i].y);
+		min_z = fminf(min_z, points[i].z);
+		max_x = fmaxf(max_x, points[i].x);
+		max_y = fmaxf(max_y, points[i].y);
+		max_z = fmaxf(max_z, points[i].z);
+	}
+
+	// Step 2: Compute center of bounding box
+	// float center_x = (min_x + max_x) / 2.0f;
+	// float center_y = (min_y + max_y) / 2.0f;
+	// float center_z = (min_z + max_z) / 2.0f;
+
+	// Step 3: Compute distance
+	float max_size = fmaxf(max_x - min_x, fmaxf(max_y - min_y, max_z - min_z));
+	float distance = (max_size / 2.0f) / tanf(camera->fov / 2.0f);
+
+	// Step 4: Set camera position and orientation
+	camera->pos = (t_vec3){max_x + distance, min_y - distance, max_z + distance};
+	// camera->target = (t_vec3){center_x, center_y, center_z};
+	// camera->up = (t_vec3){0, 1, 0};
+}
+
 t_camera	create_camera()
 {
 	t_camera	camera = {
 		.pos = {10.0f, 10.0f, 15.0f},  // Position au centre
-		.target = {0.0f, 0.0f, 0.0f},   // Direction vers l'axe Z négatif
+		.target = {1.0f, 1.0f, 1.0f},   // Direction vers l'axe Z négatif
 		.up = {0.0f, 0.0f, 1.0f},        // Haut aligné avec l'axe Y
 		.fov = 90.0f,                    // Champ de vision de 90°
 		.aspect_ratio = WIN_WIDTH / WIN_HEIGHT,    // Ratio d'écran

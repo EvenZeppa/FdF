@@ -21,7 +21,7 @@ int	init_points(t_app *app, char *file)
 		x = 0;
 		while (split[x])
 		{
-			app->points[app->nb_rows * app->nb_cols + x] = (t_vec3){x, app->nb_rows, ft_atoi(split[x])};
+			app->points[app->nb_rows * app->nb_cols + x] = (t_vec3){x, -app->nb_rows, ft_atoi(split[x])};
 			x++;
 		}
 		if (app->nb_rows == 0)
@@ -46,6 +46,9 @@ int		init_app(t_app *app, char *file)
 	app->camera = create_camera();
 	if (!init_points(app, file))
 		return (0);
+
+	position_camera(app->points, app->nb_rows * app->nb_cols, &app->camera);
+
 	app->near_fog = 40.0f;
 	app->far_fog = 50.0f;
 	app->fog_color = 0x000000;

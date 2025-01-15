@@ -52,7 +52,7 @@ typedef struct	s_app
 	void	*win;
 
 	t_camera	camera;
-	t_vec3	*points;
+	t_vec3		*points;
 	int			nb_cols;
 	int			nb_rows;
 
