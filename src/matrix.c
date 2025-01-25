@@ -50,7 +50,7 @@ t_vec4 mat4_transform_point(t_mat4 matrix, t_vec4 point) {
 	float x = point.x;
 	float y = point.y;
 	float z = point.z;
-	float w = 1.0f;
+	float w = point.w;
 
 	float transformed_x = matrix.m[0][0] * x + matrix.m[0][1] * y + matrix.m[0][2] * z + matrix.m[0][3] * w;
 	float transformed_y = matrix.m[1][0] * x + matrix.m[1][1] * y + matrix.m[1][2] * z + matrix.m[1][3] * w;

@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -g -Wall -Wextra -Werror -Iinclude
+# CFLAGS = -Wall -Wextra -Werror -Iinclude
+CFLAGS = -Iinclude
 LDFLAGS = -lmlx -lXext -lX11 -lm
 SRCS =	get_next_line.c get_next_line_utils.c \
 		src/main.c\
