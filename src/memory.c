@@ -22,6 +22,10 @@ int	init_points(t_app *app, char *file)
 		while (split[x])
 		{
 			app->points[app->nb_rows * app->nb_cols + x] = (t_vec3){x, -app->nb_rows, ft_atoi(split[x])};
+			if (app->z_min > ft_atoi(split[x]))
+				app->z_min = ft_atoi(split[x]);
+			if (app->z_max < ft_atoi(split[x]))
+				app->z_max = ft_atoi(split[x]);
 			x++;
 		}
 		if (app->nb_rows == 0)
@@ -44,6 +48,8 @@ int		init_app(t_app *app, char *file)
 	if (!app->win)
 		return (0);
 	app->camera = create_camera();
+	app->z_min = INT_MAX;
+	app->z_max = INT_MIN;
 	if (!init_points(app, file))
 		return (0);
 

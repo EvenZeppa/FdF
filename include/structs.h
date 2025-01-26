@@ -56,6 +56,9 @@ typedef struct	s_app
 	int			nb_cols;
 	int			nb_rows;
 
+	int			z_min;
+	int			z_max;
+
 	float		near_fog;
 	float		far_fog;
 	int			fog_color;

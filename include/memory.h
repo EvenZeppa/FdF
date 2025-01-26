@@ -2,6 +2,7 @@
 # define MEMORY_H
 
 # include <stdlib.h>
+# include <limits.h>
 # include <fcntl.h>
 # include "mlx.h"
 # include "libft.h"
