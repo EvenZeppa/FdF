@@ -126,11 +126,16 @@ int	render(t_app *app)
 	return (0);
 }
 
-int	main()
+int	main(int argc, char **argv)
 {
 	t_app	app;
 
-	if (!init_app(&app, "test_maps/42.fdf"))
+	if (argc != 2)
+	{
+		ft_putendl_fd("Usage: ./fdf [map]", 2);
+		return (0);
+	}
+	if (!init_app(&app, argv[1]))
 		return (0);
 
 	mlx_hook(app.win, 17, 0, exit_program, &app);

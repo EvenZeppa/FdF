@@ -4,6 +4,7 @@ void	keyboard_event(int key, t_app *app)
 {
 	static float speed = 0.1f;
 
+	app->is_update = 0;
 	if (key == KEY_ESC)
 		exit_program(app);
 	else if (key == KEY_W)
@@ -27,10 +28,15 @@ void	keyboard_event(int key, t_app *app)
 	else if (key == KEY_DOWN)
 		camera_rotate_pitch(&app->camera, -0.1f);
 	else if (key == KEY_PLUS)
+	{
 		speed += 0.1f;
+		app->is_update = 1;
+	}
 	else if (key == KEY_MINUS)
+	{
 		speed -= 0.1f;
-	app->is_update = 0;
+		app->is_update = 1;
+	}
 }
 
 int	key_press(int keycode, void *param)
