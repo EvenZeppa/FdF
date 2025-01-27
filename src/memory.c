@@ -5,6 +5,7 @@ int	init_points(t_app *app, char *file)
 	int		fd;
 	char	*line;
 	int		x;
+	int		i;
 	char	**split;
 
 	fd = open(file, O_RDONLY);
@@ -34,6 +35,9 @@ int	init_points(t_app *app, char *file)
 			return (ft_printf("Error: invalid map\n"), 0);
 		app->nb_rows++;
 		free(line);
+		i = 0;
+		while (split[i])
+			free(split[i++]);
 		free(split);
 	}
 	return (1);
@@ -68,7 +72,10 @@ void	free_app(t_app *app)
 	if (app->win)
 		mlx_destroy_window(app->mlx, app->win);
 	if (app->mlx)
+	{
 		mlx_destroy_display(app->mlx);
+		free(app->mlx);
+	}
 	if (app->points)
 		free(app->points);
 }
