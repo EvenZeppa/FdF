@@ -1,34 +1,46 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   structs.h                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ezeppa <ezeppa@student.42.fr>              #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-01-29 17:06:47 by ezeppa            #+#    #+#             */
+/*   Updated: 2025-01-29 17:06:47 by ezeppa           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef STRUCTS_H
 # define STRUCTS_H
 
-typedef struct	s_color_rgb
+typedef struct s_color_rgb
 {
 	int	red;
 	int	green;
 	int	blue;
 }	t_color_rgb;
 
-typedef struct	s_vec3
+typedef struct s_vec3
 {
-	float x;
-	float y;
-	float z;
+	float	x;
+	float	y;
+	float	z;
 }	t_vec3;
 
-typedef struct	s_vec4
+typedef struct s_vec4
 {
-	float x;
-	float y;
-	float z;
-	float w;
+	float	x;
+	float	y;
+	float	z;
+	float	w;
 }	t_vec4;
 
-typedef struct	s_mat4
+typedef struct s_mat4
 {
-	float m[4][4];
+	float	m[4][4];
 }	t_mat4;
 
-typedef struct	s_camera
+typedef struct s_camera
 {
 	t_vec3	pos;
 	t_vec3	target;
@@ -39,24 +51,24 @@ typedef struct	s_camera
 	float	far_plane;
 }	t_camera;
 
-typedef struct	s_point2
+typedef struct s_point2
 {
 	float	x;
 	float	y;
 	float	z;
 }	t_point2;
 
-typedef struct	s_point3
+typedef struct s_point3
 {
 	float	x;
 	float	y;
 	float	z;
 }	t_point3;
 
-typedef struct	s_app
+typedef struct s_app
 {
-	void	*mlx;
-	void	*win;
+	void		*mlx;
+	void		*win;
 
 	t_camera	camera;
 	t_vec3		*points;

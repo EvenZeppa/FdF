@@ -77,29 +77,39 @@ void	set_draw_data(t_draw_data *dd, t_vec3 p1, t_vec3 p2, t_mat4 vpm)
 				* (dd->y2 - dd->y1)) + 1e-6f);
 }
 
+int	check_frustum(t_app *app, t_draw_data dd)
+{
+	if (is_point_in_frustum(dd.t_p1,
+			app->camera.near_plane, app->camera.far_plane) == 0
+		|| is_point_in_frustum(dd.t_p2,
+			app->camera.near_plane, app->camera.far_plane) == 0)
+		return (0);
+	return (1);
+}
+
 void	draw_line(t_app *app, t_vec3 p1, t_vec3 p2, t_mat4 vpm)
 {
 	t_draw_data	dd;
 
 	set_draw_data(&dd, p1, p2, vpm);
-	if (is_point_in_frustum(dd.t_p1,
-			app->camera.near_plane, app->camera.far_plane) == 0
-		|| is_point_in_frustum(dd.t_p2,
-			app->camera.near_plane, app->camera.far_plane) == 0)
+	if (!check_frustum(app, dd))
 		return ;
 	while (TRUE)
 	{
 		if (dd.x1 >= 0 && dd.x1 < WIN_WIDTH && dd.y1 >= 0 && dd.y1 < WIN_HEIGHT)
-			mlx_pixel_put(app->mlx, app->win, dd.x1, dd.y1, get_color(app, dd.z1));
+			mlx_pixel_put(app->mlx, app->win,
+				dd.x1, dd.y1, get_color(app, dd.z1));
 		if (dd.x1 == dd.x2 && dd.y1 == dd.y2)
-			break;
+			break ;
 		dd.z1 += dd.dz;
 		dd.e2 = 2 * dd.err;
-		if (dd.e2 > -dd.dy) {
+		if (dd.e2 > -dd.dy)
+		{
 			dd.err -= dd.dy;
 			dd.x1 += dd.sx;
 		}
-		if (dd.e2 < dd.dx) {
+		if (dd.e2 < dd.dx)
+		{
 			dd.err += dd.dx;
 			dd.y1 += dd.sy;
 		}

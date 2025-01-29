@@ -10,6 +10,7 @@ SRCS =	get_next_line.c\
 		get_next_line_utils.c \
 		src/main.c\
 		src/vector.c\
+		src/vector1.c\
 		src/matrix.c\
 		src/camera.c\
 		src/camera1.c\

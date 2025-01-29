@@ -1,31 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   memory.h                                           :+:      :+:    :+:   */
+/*   vector1.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ezeppa <ezeppa@student.42.fr>              #+#  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025-01-29 17:06:36 by ezeppa            #+#    #+#             */
-/*   Updated: 2025-01-29 17:06:36 by ezeppa           ###   ########.fr       */
+/*   Created: 2025-01-29 15:42:21 by ezeppa            #+#    #+#             */
+/*   Updated: 2025-01-29 15:42:21 by ezeppa           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef MEMORY_H
-# define MEMORY_H
+#include "vector.h"
+#include <math.h>
 
-# include <stdlib.h>
-# include <limits.h>
-# include <fcntl.h>
-# include "mlx.h"
-# include "libft.h"
-# include "get_next_line.h"
-# include "defs.h"
-# include "structs.h"
-# include "camera.h"
+t_vec3	vec3_cross(t_vec3 a, t_vec3 b)
+{
+	return ((t_vec3){
+		a.y * b.z - a.z * b.y,
+		a.z * b.x - a.x * b.z,
+		a.x * b.y - a.y * b.x
+	});
+}
 
-int		init_points(t_app *app, char *file);
-int		init_app(t_app *app, char *file);
-void	free_app(t_app *app);
-int		exit_program(t_app *app);
+t_vec3	vec3_scale(t_vec3 a, float distance)
+{
+	return ((t_vec3){a.x * distance, a.y * distance, a.z * distance});
+}
 
-#endif
+float	vec3_dot(t_vec3 a, t_vec3 b)
+{
+	return (a.x * b.x + a.y * b.y + a.z * b.z);
+}
