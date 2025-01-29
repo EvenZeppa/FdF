@@ -1,6 +1,13 @@
 #ifndef STRUCTS_H
 # define STRUCTS_H
 
+typedef struct	s_color_rgb
+{
+	int	red;
+	int	green;
+	int	blue;
+}	t_color_rgb;
+
 typedef struct	s_vec3
 {
 	float x;
@@ -62,6 +69,8 @@ typedef struct	s_app
 	float		near_fog;
 	float		far_fog;
 	int			fog_color;
+
+	float		speed;
 
 	int			is_update;
 }	t_app;

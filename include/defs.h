@@ -20,4 +20,7 @@
 
 # define EPSILON 1.0f
 
+# define MIN_COLOR 0x3fc7a3
+# define MAX_COLOR 0xd96dd4
+
 #endif

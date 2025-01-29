@@ -12,6 +12,8 @@ SRCS =	get_next_line.c\
 		src/vector.c\
 		src/matrix.c\
 		src/camera.c\
+		src/camera1.c\
+		src/draw.c\
 		src/events.c\
 		src/memory.c
 NAME = fdf

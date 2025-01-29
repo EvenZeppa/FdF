@@ -63,6 +63,8 @@ int		init_app(t_app *app, char *file)
 	app->far_fog = 50.0f;
 	app->fog_color = 0x000000;
 
+	app->speed = 0.1f;
+
 	app->is_update = 0;
 	return (1);
 }

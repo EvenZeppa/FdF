@@ -6,6 +6,7 @@
 # include "matrix.h"
 # include "vector.h"
 # include "camera.h"
+# include "draw.h"
 # include "events.h"
 # include "memory.h"
 
