@@ -64,12 +64,14 @@ int	render(t_app *app)
 	return (0);
 }
 
-int	main(void)
+int	main(int argc, char *argv[])
 {
 	t_app	app;
 
-	if (!init_app(&app, "test_maps/42.fdf"))
-		return (0);
+	if (argc != 2)
+		return (ft_printf("Case usage ./fdf path/to/file\n"), 1);
+	if (!init_app(&app, argv[1]))
+		return (ft_printf("Error init\n"), 1);
 	mlx_hook(app.win, 17, 0, exit_program, &app);
 	mlx_hook(app.win, 2, 1L << 0, key_press, &app);
 	mlx_loop_hook(app.mlx, render, &app);

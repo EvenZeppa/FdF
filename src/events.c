@@ -47,9 +47,15 @@ void	keyboard_event(int key, t_app *app)
 	else if (key == KEY_DOWN)
 		camera_rotate_pitch(&app->camera, -0.1f);
 	else if (key == KEY_PLUS)
+	{
 		app->speed += 0.1f;
+		app->is_update = 1;
+	}
 	else if (key == KEY_MINUS)
+	{
 		app->speed -= 0.1f;
+		app->is_update = 1;
+	}
 }
 
 int	key_press(int keycode, void *param)

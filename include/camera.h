@@ -36,6 +36,7 @@ typedef struct s_angle
 	float	sin;
 }	t_angle;
 
+t_range		create_range(void);
 void		position_camera(t_vec3 *points, int num_points, t_camera *camera);
 t_camera	create_camera(void);
 void		camera_move_forward(t_camera *camera, float distance);
